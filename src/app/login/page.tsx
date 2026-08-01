@@ -83,7 +83,7 @@ function LoginFormContent() {
   return (
     <div className="min-h-screen flex flex-col justify-center bg-[#F7F4EC] py-12 px-6 lg:px-8 select-none">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Logo className="mx-auto h-12 w-12 text-[#073F3B]" />
+        <Logo className="mx-auto h-18 w-auto text-[#073F3B]" />
         <h2 className="mt-6 text-2xl font-extrabold text-[#073F3B] tracking-tight">
           Welcome back
         </h2>

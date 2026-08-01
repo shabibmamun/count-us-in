@@ -12,9 +12,8 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Navigation Bar */}
       <header className="border-b border-border py-4 px-6 md:px-12 bg-white flex justify-between items-center shadow-xs">
-        <div className="flex items-center gap-3">
-          <Logo className="h-8 w-8 text-primary" />
-          <span className="font-bold text-lg tracking-wider text-primary">COUNT US IN</span>
+        <div className="flex items-center">
+          <Logo className="h-14 w-auto text-primary" />
         </div>
         <nav className="flex items-center gap-4">
           {user ? (

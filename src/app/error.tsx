@@ -12,7 +12,7 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center py-12 px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-4">
-        <Logo className="mx-auto h-12 w-12 text-primary" />
+        <Logo className="mx-auto h-18 w-auto text-primary" />
         <h2 className="text-3xl font-extrabold text-primary">Something went wrong</h2>
         
         <div className="bg-white py-6 px-6 border border-border shadow-xs rounded-lg sm:px-10 space-y-4">
