@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Logo from '@/components/Logo';
@@ -21,9 +21,19 @@ function LoginFormContent() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Safely extract the redirect path and prevent open redirects
   const nextPath = searchParams.get('next') || '/dashboard';
   const safeRedirect = nextPath.startsWith('/') && !nextPath.startsWith('//') ? nextPath : '/dashboard';
+
+  const [originUrl, setOriginUrl] = useState('https://count-us-in.vercel.app');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOriginUrl(window.location.origin);
+    }
+  }, []);
+
+  const googleOAuthUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(
+    `${originUrl}/auth/callback?next=${encodeURIComponent(safeRedirect)}`
+  )}`;
 
   const handlePasswordSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,16 +244,15 @@ function LoginFormContent() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            className="w-full flex justify-center items-center gap-2.5 py-3 border border-[#BFD1CA] rounded-[10px] bg-white text-xs font-bold text-[#073F3B] hover:bg-[#F4F6F4] transition-all"
+          <a
+            href={googleOAuthUrl}
+            className="w-full flex justify-center items-center gap-2.5 py-3 border border-[#BFD1CA] rounded-[10px] bg-white text-xs font-bold text-[#073F3B] hover:bg-[#F4F6F4] transition-all text-center block"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
               <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.478 0-6.3-2.822-6.3-6.3s2.822-6.3 6.3-6.3c1.553 0 2.964.566 4.053 1.503l3.056-3.056C19.1 2.505 15.89 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c6.48 0 11.24-4.564 11.24-11.24 0-.768-.073-1.504-.2-2.215H12.24z"/>
             </svg>
             Continue with Google
-          </button>
+          </a>
 
           <div className="mt-6 flex justify-between items-center text-xs border-t border-[#BFD1CA] pt-4 text-[#506A64] font-semibold">
             <span>New to Count Us In?</span>
