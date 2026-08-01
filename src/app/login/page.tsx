@@ -67,14 +67,28 @@ function LoginFormContent() {
     setError('');
     setIsLoading(true);
     try {
-      const { error: authErr } = await supabase.auth.signInWithOAuth({
+      console.log('Initiating Google sign-in with origin:', window.location.origin);
+      const targetUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeRedirect)}`;
+      console.log('Redirect URI target:', targetUrl);
+      
+      const { data, error: authErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeRedirect)}`,
+          redirectTo: targetUrl,
         },
       });
+      
+      console.log('signInWithOAuth result data:', data);
       if (authErr) throw authErr;
+      
+      if (data?.url) {
+        console.log('Redirecting browser to:', data.url);
+        window.location.href = data.url;
+      } else {
+        console.warn('No redirect URL returned by Supabase signInWithOAuth.');
+      }
     } catch (err: any) {
+      console.error('Google sign-in error:', err);
       setError(err.message || 'Google sign-in failed.');
       setIsLoading(false);
     }

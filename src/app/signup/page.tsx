@@ -75,14 +75,28 @@ export default function SignUpPage() {
     setError('');
     setIsLoading(true);
     try {
-      const { error: authErr } = await supabase.auth.signInWithOAuth({
+      console.log('Initiating Google sign-up with origin:', window.location.origin);
+      const targetUrl = `${window.location.origin}/auth/callback?next=/onboarding`;
+      console.log('Redirect URI target:', targetUrl);
+      
+      const { data, error: authErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
+          redirectTo: targetUrl,
         },
       });
+      
+      console.log('signInWithOAuth result data:', data);
       if (authErr) throw authErr;
+      
+      if (data?.url) {
+        console.log('Redirecting browser to:', data.url);
+        window.location.href = data.url;
+      } else {
+        console.warn('No redirect URL returned by Supabase signInWithOAuth.');
+      }
     } catch (err: any) {
+      console.error('Google sign-up error:', err);
       setError(err.message || 'Google sign-up failed.');
       setIsLoading(false);
     }
