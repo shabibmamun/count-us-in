@@ -72,6 +72,9 @@ CREATE POLICY "Users can insert their own profile" ON public.profiles
 CREATE POLICY "Users can view workspaces they are members of" ON public.workspaces
     FOR SELECT USING (public.is_workspace_member(id, auth.uid()));
 
+CREATE POLICY "Allow public read of workspaces by ID" ON public.workspaces
+    FOR SELECT USING (true);
+
 CREATE POLICY "Users can create workspaces" ON public.workspaces
     FOR INSERT WITH CHECK (auth.uid() = created_by);
 
@@ -128,6 +131,9 @@ CREATE POLICY "Admins and owners can revoke invitations" ON public.workspace_inv
 CREATE POLICY "Users can view system and workspace categories" ON public.categories
     FOR SELECT USING (workspace_id IS NULL OR public.is_workspace_member(workspace_id, auth.uid()));
 
+CREATE POLICY "Allow public read of categories" ON public.categories
+    FOR SELECT USING (true);
+
 CREATE POLICY "Admins and owners can create categories" ON public.categories
     FOR INSERT WITH CHECK (workspace_id IS NOT NULL AND public.get_workspace_role(workspace_id, auth.uid()) IN ('owner', 'admin'));
 
@@ -158,6 +164,9 @@ CREATE POLICY "Members can view shared expenses, owners can view private ones" O
             ))
         )
     );
+
+CREATE POLICY "Allow public read of public expenses" ON public.expenses
+    FOR SELECT USING (visibility = 'shared_all');
 
 CREATE POLICY "Members can insert expenses" ON public.expenses
     FOR INSERT WITH CHECK (

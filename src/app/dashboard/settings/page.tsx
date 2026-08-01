@@ -318,6 +318,35 @@ export default function SettingsPage() {
                 {isSavingWs ? 'Saving...' : 'Save workspace parameters'}
               </button>
             </form>
+
+            {/* Share Public Ledger Book Section */}
+            <div className="border-t border-border pt-5 mt-5 space-y-3 font-semibold text-primary">
+              <span className="block text-[11px] font-bold text-muted-text uppercase">Share Ledger Book</span>
+              <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                Generate a secure, read-only public sharing link. Anyone with this link can view the public transactions (expenses) in this ledger book. Private expenses are completely hidden.
+              </p>
+              
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/ledger/share/${currentWorkspace.id}` : ''}
+                  className="flex-1 p-3 border border-[#BFD1CA] rounded-[10px] bg-[#F4F6F4]/60 text-xs font-mono text-muted-foreground select-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      navigator.clipboard.writeText(`${window.location.origin}/ledger/share/${currentWorkspace.id}`);
+                      alert('Share link copied to clipboard!');
+                    }
+                  }}
+                  className="h-11 px-5 bg-[#0AA99D] hover:bg-[#087F78] text-white font-bold rounded-[10px] text-xs shrink-0 transition-all shadow-xs"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

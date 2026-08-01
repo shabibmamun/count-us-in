@@ -272,7 +272,7 @@ const DEFAULT_CATEGORIES: Omit<Category, 'id' | 'workspace_id'>[] = [
   { name: 'Charity and Sadaqah', icon: 'Heart', is_archived: false },
   { name: 'Zakat', icon: 'Coins', is_archived: false },
   { name: 'Debt payments', icon: 'TrendingDown', is_archived: false },
-  { name: 'Loan', icon: 'TrendingDown', is_archived: false },
+  { name: 'Loan EMI', icon: 'TrendingDown', is_archived: false },
   { name: 'Insurance', icon: 'Shield', is_archived: false },
   { name: 'Household services', icon: 'Wrench', is_archived: false },
   { name: 'Personal care', icon: 'Sparkles', is_archived: false },
@@ -539,7 +539,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           // If profile does not exist yet (onboarding pending), setup partial profile
           const partialProfile: Profile = {
             id: session.user.id,
-            display_name: session.user.email?.split('@')[0] || 'User',
+            display_name: session.user.user_metadata?.given_name || session.user.user_metadata?.full_name?.split(' ')[0] || session.user.email?.split('@')[0] || 'User',
             currency: 'BDT',
             timezone: 'Asia/Dhaka',
           };
@@ -789,7 +789,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const mockId = `mock-usr-${Math.random().toString(36).substring(2, 9)}`;
       const newProf: Profile = {
         id: mockId,
-        display_name: 'Google User',
+        display_name: 'Alex',
         currency: 'BDT',
         timezone: 'Asia/Dhaka',
       };
@@ -799,7 +799,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const wsId = `ws-solo-${Math.random().toString(36).substring(2, 9)}`;
       const newWs: Workspace = {
         id: wsId,
-        name: `Google User's Private Space`,
+        name: `Alex's Private Space`,
         type: 'solo',
         created_by: mockId,
         budget_start_day: 1,
@@ -815,7 +815,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         workspace_id: wsId,
         profile_id: mockId,
         role: 'owner',
-        display_name: 'Google User',
+        display_name: 'Alex',
       };
       setMembers([newMem]);
       saveToLocalStorage('cui_members', [newMem]);
