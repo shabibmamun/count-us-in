@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F7F4EC; /* Warm ivory background */
+  --foreground: #16332F; /* Deep teal ink text */
+  --card: #ffffff;
+  --card-foreground: #16332F;
+  --popover: #ffffff;
+  --popover-foreground: #16332F;
+  --primary: #073F3B; /* Deep teal ink */
+  --primary-foreground: #F7F4EC; /* Warm ivory on teal */
+  --secondary: #EDF6F3; /* Pale mint surface */
+  --secondary-foreground: #073F3B;
+  --muted: #F4F6F4; /* Muted neutral surface */
+  --muted-foreground: #667A75; /* Grey-teal text */
+  --accent: #0AA99D; /* Turquoise progress / active accent */
+  --accent-foreground: #ffffff;
+  --destructive: #C85450; /* Muted status red */
+  --destructive-foreground: #ffffff;
+  --warning: #D28F1F; /* Muted status gold/amber */
+  --warning-foreground: #ffffff;
+  --border: #D9E4DF; /* Muted grey-teal borders */
+  --input: #ffffff;
+  --ring: #087F78; /* Brand teal ring focus */
+  --radius: 16px; /* Default card radius */
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Brand Accents */
+  --color-brand-ink: #073F3B;
+  --color-brand-teal: #087F78;
+  --color-brand-turquoise: #0AA99D;
+  --color-brand-gold: #E5A823;
+  --color-soft-mint: #EDF6F3;
+  --color-muted-neutral: #F4F6F4;
+  --color-strong-border: #BFD1CA;
+  --color-muted-text: #879792;
+
+  /* Status Colors */
+  --color-success-status: #16865C;
+  --color-warning-status: #D28F1F;
+  --color-danger-status: #C85450;
+  
+  --radius-lg: var(--radius);
+  --radius-md: 10px; /* Inputs and buttons */
+  --radius-sm: 6px;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-manrope), sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom focus ring styling for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
