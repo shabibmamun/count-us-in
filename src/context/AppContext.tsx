@@ -272,6 +272,7 @@ const DEFAULT_CATEGORIES: Omit<Category, 'id' | 'workspace_id'>[] = [
   { name: 'Charity and Sadaqah', icon: 'Heart', is_archived: false },
   { name: 'Zakat', icon: 'Coins', is_archived: false },
   { name: 'Debt payments', icon: 'TrendingDown', is_archived: false },
+  { name: 'Loan', icon: 'TrendingDown', is_archived: false },
   { name: 'Insurance', icon: 'Shield', is_archived: false },
   { name: 'Household services', icon: 'Wrench', is_archived: false },
   { name: 'Personal care', icon: 'Sparkles', is_archived: false },
