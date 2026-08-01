@@ -555,12 +555,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         let currentProfile = profile;
+        const meta = session.user.user_metadata || {};
+        const googleFirstName = meta.given_name || 
+                                meta.first_name || 
+                                meta.name?.split(' ')[0] || 
+                                meta.full_name?.split(' ')[0] || 
+                                session.user.email?.split('@')[0] || 
+                                'User';
 
         if (!currentProfile) {
-          const firstName = session.user.user_metadata?.given_name || session.user.user_metadata?.full_name?.split(' ')[0] || session.user.email?.split('@')[0] || 'User';
           const newProfile: Profile = {
             id: session.user.id,
-            display_name: firstName,
+            display_name: googleFirstName,
             currency: 'BDT',
             timezone: 'Asia/Dhaka',
           };
@@ -575,11 +581,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           } else {
             currentProfile = newProfile;
           }
+        } else if (currentProfile.display_name === 'User' || currentProfile.display_name === 'Alex' || !currentProfile.display_name) {
+          // If the profile exists but has a placeholder name, update it to their Google name!
+          const updatedProfile = {
+            ...currentProfile,
+            display_name: googleFirstName
+          };
+          const { error: updateErr } = await supabase
+            .from('profiles')
+            .update({ display_name: googleFirstName })
+            .eq('id', session.user.id);
+            
+          if (!updateErr) {
+            currentProfile = updatedProfile;
+            // Also update workspace_members display name
+            await supabase
+              .from('workspace_members')
+              .update({ display_name: googleFirstName })
+              .eq('profile_id', session.user.id);
+          }
         }
 
         setUser(currentProfile || {
           id: session.user.id,
-          display_name: 'User',
+          display_name: googleFirstName,
           currency: 'BDT',
           timezone: 'Asia/Dhaka'
         });
