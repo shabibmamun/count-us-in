@@ -90,8 +90,8 @@ export default function SignUpPage() {
       if (authErr) throw authErr;
       
       if (data?.url) {
-        console.log('Redirecting browser to:', data.url);
-        window.location.href = data.url;
+        console.log('Redirecting browser using window.location.assign to:', data.url);
+        window.location.assign(data.url);
       } else {
         console.warn('No redirect URL returned by Supabase signInWithOAuth.');
       }
