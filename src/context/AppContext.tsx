@@ -228,6 +228,7 @@ interface AppContextType {
   // Zakat
   addZakat: (amount: number, year: number, options?: Partial<ZakatPayment>) => Promise<void>;
   deleteZakat: (zakatId: string) => Promise<void>;
+  editZakat: (zakatId: string, updates: Partial<ZakatPayment>) => Promise<void>;
   
   // Settlements
   addSettlement: (payerId: string, recipientId: string, amount: number, notes?: string) => Promise<void>;
@@ -1668,6 +1669,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setZakatPayments(zakatPayments.map(z => z.id === zakatId ? { ...z, is_deleted: true } : z));
   };
 
+  const editZakat = async (zakatId: string, updates: Partial<ZakatPayment>) => {
+    if (isFallbackMode) {
+      const updated = zakatPayments.map(z => z.id === zakatId ? { ...z, ...updates } : z);
+      setZakatPayments(updated);
+      saveToLocalStorage('cui_zakat', updated);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('zakat_payments')
+      .update(updates)
+      .eq('id', zakatId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    setZakatPayments(zakatPayments.map(z => z.id === zakatId ? data : z));
+    await logAction('zakat_updated', { zakatId });
+  };
+
   // ----------------------------------------------------------------------------
   // Settlements
   // ----------------------------------------------------------------------------
@@ -1940,6 +1961,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveSavingTarget,
         addZakat,
         deleteZakat,
+        editZakat,
         addSettlement,
         deleteSettlement,
         logAction,
