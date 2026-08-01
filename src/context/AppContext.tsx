@@ -554,32 +554,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return;
         }
 
-        if (!profile) {
-          const partialProfile: Profile = {
+        let currentProfile = profile;
+
+        if (!currentProfile) {
+          const firstName = session.user.user_metadata?.given_name || session.user.user_metadata?.full_name?.split(' ')[0] || session.user.email?.split('@')[0] || 'User';
+          const newProfile: Profile = {
             id: session.user.id,
-            display_name: session.user.user_metadata?.given_name || session.user.user_metadata?.full_name?.split(' ')[0] || session.user.email?.split('@')[0] || 'User',
+            display_name: firstName,
             currency: 'BDT',
             timezone: 'Asia/Dhaka',
           };
-          setUser(partialProfile);
-          setIsLoading(false);
-          return;
+          
+          // Insert profile immediately
+          const { error: upsertErr } = await supabase
+            .from('profiles')
+            .upsert(newProfile);
+          
+          if (upsertErr) {
+            console.error('Failed to create profile row:', upsertErr);
+          } else {
+            currentProfile = newProfile;
+          }
         }
 
-        setUser(profile);
+        setUser(currentProfile || {
+          id: session.user.id,
+          display_name: 'User',
+          currency: 'BDT',
+          timezone: 'Asia/Dhaka'
+        });
 
-        const { data: wsMembers, error: membersErr } = await supabase
+        // Ensure a default personal workspace exists for the user
+        const { data: existingMembers, error: membersCheckErr } = await supabase
           .from('workspace_members')
           .select('*, workspaces(*)')
           .eq('profile_id', session.user.id);
 
-        if (membersErr) {
+        if (membersCheckErr) {
           setIsConnectionError(true);
           setIsLoading(false);
           return;
         }
 
-        if (!wsMembers || wsMembers.length === 0) {
+        let wsMembers = existingMembers || [];
+
+        if (wsMembers.length === 0) {
+          const wsId = crypto.randomUUID();
+          
+          // 1. Create solo workspace
+          const { error: wsErr } = await supabase
+            .from('workspaces')
+            .insert({
+              id: wsId,
+              name: 'Personal space',
+              type: 'solo',
+              created_by: session.user.id,
+              budget_start_day: 1,
+              currency: 'BDT'
+            });
+
+          if (!wsErr) {
+            // 2. Add user as owner member
+            const newMemberRow = {
+              workspace_id: wsId,
+              profile_id: session.user.id,
+              role: 'owner',
+              display_name: currentProfile?.display_name || 'User'
+            };
+            
+            const { error: memErr } = await supabase
+              .from('workspace_members')
+              .insert(newMemberRow);
+
+            if (!memErr) {
+              // Fetch membership again to load properly
+              const { data: reloadedMembers } = await supabase
+                .from('workspace_members')
+                .select('*, workspaces(*)')
+                .eq('profile_id', session.user.id);
+              if (reloadedMembers) {
+                wsMembers = reloadedMembers;
+              }
+            }
+          }
+        }
+
+        if (wsMembers.length === 0) {
           setIsLoading(false);
           return;
         }
@@ -807,43 +867,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logInWithGoogle = async () => {
-    if (isFallbackMode || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('placeholder')) {
-      const mockId = `mock-usr-${Math.random().toString(36).substring(2, 9)}`;
-      const newProf: Profile = {
-        id: mockId,
-        display_name: 'Alex',
-        currency: 'BDT',
-        timezone: 'Asia/Dhaka',
-      };
-      setUser(newProf);
-      saveToLocalStorage('cui_user', newProf);
-      
-      const wsId = `ws-solo-${Math.random().toString(36).substring(2, 9)}`;
-      const newWs: Workspace = {
-        id: wsId,
-        name: `Alex's Private Space`,
-        type: 'solo',
-        created_by: mockId,
-        budget_start_day: 1,
-        monthly_saving_target: 0,
-        currency: 'BDT',
-      };
-      setWorkspaces([newWs]);
-      setCurrentWorkspace(newWs);
-      saveToLocalStorage('cui_workspaces', [newWs]);
-      saveToLocalStorage('cui_curr_ws', newWs);
-      
-      const newMem: WorkspaceMember = {
-        workspace_id: wsId,
-        profile_id: mockId,
-        role: 'owner',
-        display_name: 'Alex',
-      };
-      setMembers([newMem]);
-      saveToLocalStorage('cui_members', [newMem]);
-      return;
-    }
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

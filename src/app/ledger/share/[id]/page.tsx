@@ -78,22 +78,8 @@ export default function SharedLedgerPage() {
         console.error('Error fetching shared ledger:', err);
         setError(err.message || 'Could not load the shared ledger book.');
         
-        // Setup mockup data for local anonymous preview in case Supabase credentials aren't linked yet
-        setWorkspace({
-          id: id as string,
-          name: 'Preview Shared Ledger',
-          currency: 'BDT'
-        });
-        setExpenses([
-          { id: '1', merchant: 'Mock Rent Payment', amount: 25000, currency: 'BDT', expense_date: new Date().toISOString(), category_id: '1', payment_method: 'Bank Transfer' },
-          { id: '2', merchant: 'Local Groceries Store', amount: 4500, currency: 'BDT', expense_date: new Date(Date.now() - 86400000).toISOString(), category_id: '2', payment_method: 'Cash' },
-          { id: '3', merchant: 'Electricity Utility Bill', amount: 3200, currency: 'BDT', expense_date: new Date(Date.now() - 172800000).toISOString(), category_id: '3', payment_method: 'Card' }
-        ]);
-        setCategories([
-          { id: '1', name: 'Housing' },
-          { id: '2', name: 'Groceries' },
-          { id: '3', name: 'Utilities' }
-        ]);
+        setWorkspace(null);
+        setExpenses([]);
       } finally {
         setLoading(false);
       }
