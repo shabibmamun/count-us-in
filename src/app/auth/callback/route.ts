@@ -34,15 +34,22 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
           return response;
+        } else {
+          console.error('exchangeCodeForSession error:', error);
+          const loginUrl = new URL('/login', request.url);
+          loginUrl.searchParams.set('error', error.message || 'auth-callback-failed');
+          return NextResponse.redirect(loginUrl);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error('Session exchange error:', e);
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('error', e.message || 'session-exchange-exception');
+        return NextResponse.redirect(loginUrl);
       }
     }
   }
 
-  // If code exchange fails, redirect to login
   const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('error', 'auth-callback-failed');
+  loginUrl.searchParams.set('error', 'invalid-code-or-config');
   return NextResponse.redirect(loginUrl);
 }
