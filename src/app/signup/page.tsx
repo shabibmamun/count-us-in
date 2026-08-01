@@ -96,7 +96,7 @@ export default function SignUpPage() {
           Create your space
         </h2>
         <p className="mt-2 text-xs font-semibold text-[#506A64]">
-          Choose your signup method to build one clear view of your money.
+          Create your space by signing in with Google or choosing another method.
         </p>
       </div>
 

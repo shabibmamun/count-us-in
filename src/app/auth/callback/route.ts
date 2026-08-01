@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -10,34 +10,34 @@ export async function GET(request: NextRequest) {
   // Prevent open redirect vulnerabilities
   const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
 
-  if (code) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder';
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const response = NextResponse.redirect(new URL(safeNext, request.url));
 
-    try {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error && data.session) {
-        const response = NextResponse.redirect(new URL(safeNext, request.url));
-        
-        // Write standard cookies for server-side middleware checking
-        response.cookies.set('sb-access-token', data.session.access_token, {
-          path: '/',
-          maxAge: data.session.expires_in,
-          sameSite: 'lax',
-          secure: true
-        });
-        response.cookies.set('sb-refresh-token', data.session.refresh_token, {
-          path: '/',
-          maxAge: 604800,
-          sameSite: 'lax',
-          secure: true
-        });
-        
-        return response;
+  if (code) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (url && anonKey && !url.includes('placeholder')) {
+      const supabase = createServerClient(url, anonKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
+        },
+      });
+
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) {
+          return response;
+        }
+      } catch (e) {
+        console.error('Session exchange error:', e);
       }
-    } catch (e) {
-      console.error('Session exchange error:', e);
     }
   }
 

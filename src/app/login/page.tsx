@@ -88,7 +88,7 @@ function LoginFormContent() {
           Welcome back
         </h2>
         <p className="mt-2 text-xs font-semibold text-[#506A64]">
-          Choose your login method to see where things stand.
+          Sign in with Google or choose another method to see where things stand.
         </p>
       </div>
 
