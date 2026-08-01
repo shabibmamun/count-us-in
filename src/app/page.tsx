@@ -25,20 +25,12 @@ export default function LandingPage() {
               Go to Dashboard
             </Link>
           ) : (
-            <>
-              <Link 
-                href="/login" 
-                className="text-foreground hover:text-primary transition-colors text-sm font-medium"
-              >
-                Sign in
-              </Link>
-              <Link 
-                href="/signup" 
-                className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:opacity-90 transition-all text-sm"
-              >
-                Start counting
-              </Link>
-            </>
+            <Link 
+              href="/login" 
+              className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:opacity-90 transition-all text-sm"
+            >
+              Sign in
+            </Link>
           )}
         </nav>
       </header>
@@ -68,20 +60,12 @@ export default function LandingPage() {
                 Enter your space
               </Link>
             ) : (
-              <>
-                <Link 
-                  href="/signup" 
-                  className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-md shadow-md hover:opacity-95 transition-all text-center"
-                >
-                  Start counting
-                </Link>
-                <Link 
-                  href="/login" 
-                  className="w-full sm:w-auto px-8 py-4 border border-primary text-primary font-semibold rounded-md hover:bg-secondary transition-all text-center"
-                >
-                  Sign in
-                </Link>
-              </>
+              <Link 
+                href="/login" 
+                className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-md shadow-md hover:opacity-95 transition-all text-center"
+              >
+                Sign in
+              </Link>
             )}
           </div>
         </section>
@@ -162,10 +146,10 @@ export default function LandingPage() {
               Join today to build a simpler, fairer, and completely private view of your financial life.
             </p>
             <Link 
-              href="/signup" 
+              href="/login" 
               className="px-8 py-4 bg-accent text-accent-foreground font-semibold rounded-md shadow-md hover:opacity-95 transition-all text-center inline-block"
             >
-              Create your space
+              Sign in
             </Link>
           </div>
         </section>
