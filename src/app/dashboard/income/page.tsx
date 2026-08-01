@@ -76,7 +76,7 @@ export default function IncomeTrackingPage() {
 
   React.useEffect(() => {
     if (currentWorkspace) {
-      setVisibility(currentWorkspace.type === 'solo' ? 'private' : 'shared_all');
+      setVisibility('shared_all');
     }
   }, [currentWorkspace]);
 
@@ -367,24 +367,22 @@ export default function IncomeTrackingPage() {
                       {currency} {inc.amount.toFixed(2)}
                     </span>
                     
-                    {inc.profile_id === user?.id && (
-                      <div className="flex gap-1.5 shrink-0">
-                        <button
-                          onClick={() => handleStartEdit(inc)}
-                          className="p-1.5 text-muted-foreground hover:text-primary rounded-md hover:bg-background transition-colors"
-                          title="Edit"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => deleteIncome(inc.id)}
-                          className="p-1.5 text-muted-foreground hover:text-destructive rounded-md hover:bg-red-50 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleStartEdit(inc)}
+                        className="p-1.5 text-muted-foreground hover:text-primary rounded-md hover:bg-background transition-colors"
+                        title="Edit"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteIncome(inc.id)}
+                        className="p-1.5 text-muted-foreground hover:text-destructive rounded-md hover:bg-red-50 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

@@ -236,10 +236,9 @@ CREATE POLICY "Members can view visible incomes, profile owner views private" ON
         )
     );
 
-CREATE POLICY "Users can manage their own income records" ON public.incomes
+CREATE POLICY "Members can manage all income records in their workspace" ON public.incomes
     FOR ALL USING (
-        public.is_workspace_member(workspace_id, auth.uid()) AND 
-        profile_id = auth.uid()
+        public.is_workspace_member(workspace_id, auth.uid())
     );
 
 --------------------------------------------------------------------------------
