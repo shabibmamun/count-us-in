@@ -302,74 +302,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [recurringTemplates, setRecurringTemplates] = useState<any[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isFallbackMode, setIsFallbackMode] = useState(false);
+  const isFallbackMode = false;
   const [isConnectionError, setIsConnectionError] = useState(false);
-
-  // ----------------------------------------------------------------------------
-  // Helper: Synchronize state with localStorage in case of fallback
-  // ----------------------------------------------------------------------------
-  const loadFromLocalStorage = () => {
-    try {
-      setIsFallbackMode(true);
-      const storedUser = localStorage.getItem('cui_user');
-      const storedWorkspaces = localStorage.getItem('cui_workspaces');
-      const storedCurrentWorkspace = localStorage.getItem('cui_curr_ws');
-      const storedMembers = localStorage.getItem('cui_members');
-      const storedInvitations = localStorage.getItem('cui_invitations');
-      const storedCategories = localStorage.getItem('cui_categories');
-      const storedExpenses = localStorage.getItem('cui_expenses');
-      const storedIncomes = localStorage.getItem('cui_incomes');
-      const storedBudgets = localStorage.getItem('cui_budgets');
-      const storedTargets = localStorage.getItem('cui_saving_targets');
-      const storedZakat = localStorage.getItem('cui_zakat');
-      const storedSettlements = localStorage.getItem('cui_settlements');
-      const storedAudit = localStorage.getItem('cui_audit_logs');
-      const storedRules = localStorage.getItem('cui_merchant_rules');
-
-      if (storedUser) setUser(JSON.parse(storedUser));
-      if (storedWorkspaces) setWorkspaces(JSON.parse(storedWorkspaces));
-      if (storedCurrentWorkspace) setCurrentWorkspace(JSON.parse(storedCurrentWorkspace));
-      if (storedMembers) setMembers(JSON.parse(storedMembers));
-      if (storedInvitations) setInvitations(JSON.parse(storedInvitations));
-      if (storedCategories) {
-        setCategories(JSON.parse(storedCategories));
-      } else {
-        // Initialize fallback system categories
-        const systemCategories = DEFAULT_CATEGORIES.map((cat, idx) => ({
-          id: `sys-cat-${idx}`,
-          workspace_id: null,
-          ...cat,
-        }));
-        setCategories(systemCategories);
-        localStorage.setItem('cui_categories', JSON.stringify(systemCategories));
-      }
-
-      if (storedExpenses) setExpenses(JSON.parse(storedExpenses));
-      if (storedIncomes) setIncomes(JSON.parse(storedIncomes));
-      if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
-      if (storedTargets) setSavingTargets(JSON.parse(storedTargets));
-      if (storedZakat) setZakatPayments(JSON.parse(storedZakat));
-      if (storedSettlements) setSettlements(JSON.parse(storedSettlements));
-      if (storedAudit) setAuditLogs(JSON.parse(storedAudit));
-      if (storedRules) setMerchantRules(JSON.parse(storedRules));
-
-      const storedTemplates = localStorage.getItem('cui_recurring_templates');
-      if (storedTemplates) {
-        const parsed = JSON.parse(storedTemplates);
-        setRecurringTemplates(parsed);
-        setTimeout(() => {
-          if (parsed.length > 0 && storedCurrentWorkspace) {
-            const ws = JSON.parse(storedCurrentWorkspace);
-            processRecurringItems(parsed, ws.id);
-          }
-        }, 100);
-      }
-    } catch (e) {
-      console.error('Error loading fallback data:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const processRecurringItems = async (templates: any[], workspaceId: string) => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -892,10 +826,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logInWithGoogle = async () => {
+    const origin = window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${origin}/auth/callback?next=/dashboard`,
       },
     });
 
