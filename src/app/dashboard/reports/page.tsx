@@ -23,11 +23,8 @@ export default function ReportsPage() {
     settlements, 
     categories, 
     members,
-    importBackup,
     user 
   } = useApp();
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const currency = currentWorkspace?.currency || 'BDT';
   const isSolo = currentWorkspace?.type === 'solo';
 
@@ -165,23 +162,7 @@ export default function ReportsPage() {
     link.click();
   };
 
-  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const text = event.target?.result as string;
-        await importBackup(text);
-        alert('Workspace backup successfully restored!');
-        window.location.reload();
-      } catch (err: any) {
-        alert('Backup restoration failed: ' + err.message);
-      }
-    };
-    reader.readAsText(file);
-  };
 
   return (
     <div className="space-y-8 w-full select-none">
@@ -229,9 +210,18 @@ export default function ReportsPage() {
           <h3 className={`text-[28px] font-extrabold mt-2 ${netSavings >= 0 ? 'text-primary' : 'text-[#C85450]'}`}>
             {currency} {netSavings.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </h3>
-          <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-text font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823]"></span>
-            <span>{savingsRate.toFixed(0)}% savings rate</span>
+          <div className="flex flex-col gap-1 mt-1.5 text-[10px] text-muted-text font-bold">
+            {totalIncome > 0 ? (
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823]"></span>
+                <span>{savingsRate.toFixed(0)}% savings rate</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-0.5">
+                <span>Savings rate: —</span>
+                <p className="text-[9px] text-muted-foreground font-semibold">Add income to calculate your savings rate.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -405,9 +395,9 @@ export default function ReportsPage() {
           </button>
         </div>
  
-        {/* JSON workspace backup / restore */}
-        <div className="border-t border-border pt-5 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
-          <div className="space-y-2">
+        {/* JSON workspace backup */}
+        <div className="border-t border-border pt-5 text-xs">
+          <div className="space-y-2 max-w-md">
             <h4 className="font-bold text-primary text-sm">Download JSON workspace backup</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Export your entire workspace profile including members, expenses, incomes, and settlements into a single backup file.
@@ -417,26 +407,6 @@ export default function ReportsPage() {
               className="h-10 px-4 bg-[#073F3B] hover:bg-[#087F78] text-white font-semibold text-xs rounded-md transition-all flex items-center gap-1.5"
             >
               <Download className="h-4 w-4" /> Download backup
-            </button>
-          </div>
- 
-          <div className="space-y-2">
-            <h4 className="font-bold text-primary text-sm">Restore workspace backup</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Upload a previously downloaded JSON backup file to overwrite your current local workspace records.
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImportBackup}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="h-10 px-4 border border-[#9CB7AE] text-[#073F3B] hover:bg-[#EDF6F3] font-semibold text-xs rounded-md transition-all flex items-center gap-1.5"
-            >
-              <Upload className="h-4 w-4" /> Import backup
             </button>
           </div>
         </div>

@@ -327,7 +327,10 @@ export default function DashboardOverview() {
                     </span>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-muted-text mt-1.5 font-medium">Add income to calculate your available balance</p>
+                  <div className="mt-1.5 text-[10px] text-muted-text font-semibold flex flex-col gap-1">
+                    <span>Savings rate: —</span>
+                    <p className="font-medium text-muted-foreground">Add income to calculate your savings rate.</p>
+                  </div>
                 )}
               </div>
             </div>

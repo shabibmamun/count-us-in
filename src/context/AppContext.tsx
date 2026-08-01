@@ -166,6 +166,7 @@ interface AppContextType {
   auditLogs: AuditLog[];
   recurringTemplates: any[];
   isFallbackMode: boolean; // True if using localStorage instead of Supabase
+  isConnectionError: boolean;
   isLoading: boolean;
   
   // Auth Operations
@@ -302,6 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [isLoading, setIsLoading] = useState(true);
   const [isFallbackMode, setIsFallbackMode] = useState(false);
+  const [isConnectionError, setIsConnectionError] = useState(false);
 
   // ----------------------------------------------------------------------------
   // Helper: Synchronize state with localStorage in case of fallback
@@ -519,25 +521,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // ----------------------------------------------------------------------------
   useEffect(() => {
     const initApp = async () => {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!url || url.includes('placeholder') || !key || key.includes('placeholder')) {
+        setIsConnectionError(true);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        // Check session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionErr } = await supabase.auth.getSession();
+        if (sessionErr) {
+          setIsConnectionError(true);
+          setIsLoading(false);
+          return;
+        }
         
         if (!session) {
-          // No supabase session: Fallback mode or anonymous preview
-          loadFromLocalStorage();
+          setIsLoading(false);
           return;
         }
 
-        // Fetch User Profile
         const { data: profile, error: profileErr } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
 
-        if (profileErr || !profile) {
-          // If profile does not exist yet (onboarding pending), setup partial profile
+        if (profileErr && profileErr.code !== 'PGRST116') {
+          setIsConnectionError(true);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!profile) {
           const partialProfile: Profile = {
             id: session.user.id,
             display_name: session.user.user_metadata?.given_name || session.user.user_metadata?.full_name?.split(' ')[0] || session.user.email?.split('@')[0] || 'User',
@@ -551,32 +568,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         setUser(profile);
 
-        // Fetch user's workspaces
         const { data: wsMembers, error: membersErr } = await supabase
           .from('workspace_members')
           .select('*, workspaces(*)')
           .eq('profile_id', session.user.id);
 
-        if (membersErr || !wsMembers || wsMembers.length === 0) {
-          // Onboarding needed
+        if (membersErr) {
+          setIsConnectionError(true);
           setIsLoading(false);
           return;
         }
 
-        const userWorkspaces = wsMembers.map((m: any) => m.workspaces) as Workspace[];
+        if (!wsMembers || wsMembers.length === 0) {
+          setIsLoading(false);
+          return;
+        }
+
+        const userWorkspaces = wsMembers.map((m: any) => m.workspaces).filter(Boolean) as Workspace[];
         setWorkspaces(userWorkspaces);
 
-        // Pick current workspace (fallback to first, or check localStorage preference)
         const cachedWsId = localStorage.getItem('cui_curr_ws_id');
         let selectedWs = userWorkspaces.find(w => w.id === cachedWsId) || userWorkspaces[0];
         setCurrentWorkspace(selectedWs);
 
-        // Hydrate data for current workspace
         await hydrateWorkspaceData(selectedWs.id, session.user.id);
 
       } catch (err) {
-        console.warn('Supabase not available or error occurred. Loading local fallback environment...', err);
-        loadFromLocalStorage();
+        console.error('Connection/Auth error:', err);
+        setIsConnectionError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -838,12 +859,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWorkspaces([]);
     setCurrentWorkspace(null);
     setMembers([]);
-    if (!isFallbackMode) {
-      await supabase.auth.signOut();
-    } else {
-      localStorage.removeItem('cui_user');
-      localStorage.removeItem('cui_curr_ws');
+    setExpenses([]);
+    setIncomes([]);
+    setBudgets([]);
+    setSavingTargets([]);
+    setZakatPayments([]);
+    setSettlements([]);
+    
+    if (typeof window !== 'undefined') {
+      document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
+
+    await supabase.auth.signOut();
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -862,8 +890,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
-      .eq('id', user.id);
+      .upsert({
+        id: user.id,
+        ...updates,
+        updated_at: new Date().toISOString()
+      });
     if (error) throw error;
     
     await logAction('profile_updated', { updates });
@@ -1933,6 +1964,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         settlements,
         auditLogs,
         isFallbackMode,
+        isConnectionError,
         isLoading,
         signUp,
         logIn,

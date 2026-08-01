@@ -349,3 +349,55 @@ CREATE POLICY "Members can view insights" ON public.smart_guide_insights
 
 CREATE POLICY "System can manage insights" ON public.smart_guide_insights
     FOR ALL USING (public.is_workspace_member(workspace_id, auth.uid()));
+
+--------------------------------------------------------------------------------
+-- 19. Storage Bucket Policies (Private Receipts)
+--------------------------------------------------------------------------------
+
+-- Ensure the private receipts storage bucket exists
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'receipts',
+    'receipts',
+    false, -- Private bucket
+    5242880, -- 5MB limit
+    ARRAY['image/jpeg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET 
+    public = false,
+    file_size_limit = 5242880,
+    allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp'];
+
+-- Storage object access control policies
+CREATE POLICY "Authorized workspace members can read receipts" ON storage.objects
+    FOR SELECT TO authenticated
+    USING (
+        bucket_id = 'receipts' AND (
+            public.is_workspace_member(
+                (SPLIT_PART(name, '/', 1))::UUID,
+                auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "Workspace members can upload receipts" ON storage.objects
+    FOR INSERT TO authenticated
+    WITH CHECK (
+        bucket_id = 'receipts' AND (
+            public.is_workspace_member(
+                (SPLIT_PART(name, '/', 1))::UUID,
+                auth.uid()
+            )
+        )
+    );
+
+CREATE POLICY "Workspace members can delete receipts" ON storage.objects
+    FOR DELETE TO authenticated
+    USING (
+        bucket_id = 'receipts' AND (
+            public.is_workspace_member(
+                (SPLIT_PART(name, '/', 1))::UUID,
+                auth.uid()
+            )
+        )
+    );

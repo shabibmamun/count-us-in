@@ -27,7 +27,15 @@ export default function MembersManagementPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Check roles
-  const myRole = members.find(m => m.profile_id === user?.id)?.role || 'member';
+  const activeMembers = members.length > 0 ? members : (user ? [{
+    profile_id: user.id,
+    role: 'owner' as any,
+    display_name: user.display_name,
+    workspace_id: currentWorkspace?.id || '',
+    joined_at: new Date().toISOString()
+  }] : []);
+
+  const myRole = activeMembers.find(m => m.profile_id === user?.id)?.role || 'member';
   const canInvite = myRole === 'owner' || myRole === 'admin';
 
   if (isSolo) {
@@ -77,11 +85,11 @@ export default function MembersManagementPage() {
           <div className="bg-white border border-border rounded-lg shadow-xs overflow-hidden">
             <div className="p-4 border-b border-border bg-background/30 flex items-center justify-between text-xs font-bold text-primary uppercase tracking-wider">
               <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Workspace members</span>
-              <span className="text-muted-foreground normal-case font-normal">Active count: {members.length} / 6</span>
+              <span className="text-muted-foreground normal-case font-normal">Active count: {activeMembers.length} / 6</span>
             </div>
 
             <div className="divide-y divide-border">
-              {members.map((m) => (
+              {activeMembers.map((m) => (
                 <div key={m.profile_id} className="p-4 flex justify-between items-center text-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center">

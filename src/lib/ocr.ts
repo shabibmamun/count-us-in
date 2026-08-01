@@ -63,10 +63,76 @@ export function parseReceiptText(text: string): Omit<OCRResult, 'rawText'> {
     }
   }
 
-  // Sort possible amounts descending. The total is usually the largest number on the receipt.
+  // AI-powered heuristic parsing to select the most likely total amount candidate
   if (possibleAmounts.length > 0) {
+    // Sort descending first so that larger amounts are evaluated first and act as the tie-breaker
     possibleAmounts.sort((a, b) => b - a);
-    amount = possibleAmounts[0];
+
+    // Score each candidate amount
+    const candidateScores = possibleAmounts.map(val => {
+      let score = 0;
+      
+      // Exact number boundary RegExp match to prevent substring matching bugs (e.g. 50 matching inside 1050)
+      const valStrEscaped = val.toString().replace('.', '\\.');
+      const valFixedEscaped = val.toFixed(2).replace('.', '\\.');
+      const boundaryRegex = new RegExp(`\\b${valStrEscaped}\\b|\\b${valFixedEscaped}\\b`);
+
+      // Heuristic 1: Scan lines for context surrounding this number
+      for (const line of lines) {
+        const lowerLine = line.toLowerCase();
+        const hasVal = boundaryRegex.test(lowerLine);
+        
+        if (hasVal) {
+          // Total Amount Indicators (High weight)
+          if (/\b(?:total|grand\s*total|net\s*amount|payable|due|amount\s*paid|sum|total\s*due)\b/i.test(lowerLine)) {
+            score += 100;
+          }
+          // Subtotal Indicators (Medium weight)
+          if (/\b(?:subtotal|sub\s*total|net|sub)\b/i.test(lowerLine)) {
+            score += 40;
+          }
+          // Payment/Method Indicators (Low-medium weight)
+          if (/\b(?:cash|card|tendered|paid|payment)\b/i.test(lowerLine)) {
+            score += 30;
+          }
+          // Taxes/Services
+          if (/\b(?:vat|tax|service|discount|fee)\b/i.test(lowerLine)) {
+            score += 20;
+          }
+          // Currency symbols
+          if (/(?:bdt|tk|taka|usd|\$|eur|€)/i.test(lowerLine)) {
+            score += 15;
+          }
+          // Quantity/Item counts decrease likelihood of being the final total
+          if (/\b(?:qty|items|item|pcs|pc|quantity|x\d)\b/i.test(lowerLine)) {
+            score -= 40;
+          }
+          // Change/returned amounts are NOT the total spent
+          if (/\b(?:change|returned|refund)\b/i.test(lowerLine)) {
+            score -= 80;
+          }
+        }
+      }
+
+      // Heuristic 2: Filter out numbers that look like dates or years
+      const todayYear = new Date().getFullYear();
+      if (val >= todayYear - 10 && val <= todayYear + 1) {
+        score -= 50; // Probably a year
+      }
+      
+      // Heuristic 3: Filter out card numbers or phone numbers
+      if (val > 100000 && Number.isInteger(val)) {
+        score -= 150; // Too large and integer only
+      }
+
+      return { val, score };
+    });
+
+    // Sort by score descending (highest score first)
+    candidateScores.sort((a, b) => b.score - a.score);
+    
+    // Choose highest scorer
+    amount = candidateScores[0]?.val || possibleAmounts[0];
   }
 
   // 3. Detect date

@@ -27,9 +27,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     user, 
     currentWorkspace, 
     workspaces, 
+    members,
     switchWorkspace, 
     logOut, 
-    isFallbackMode 
+    isFallbackMode,
+    isConnectionError,
+    isLoading
   } = useApp();
   
   const pathname = usePathname();
@@ -37,6 +40,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showMoreMobile, setShowMoreMobile] = useState(false);
   const [showFallbackPill, setShowFallbackPill] = useState(true);
+
+  // Authenticated route safety checks
+  React.useEffect(() => {
+    if (!isLoading && !isConnectionError) {
+      if (!user) {
+        router.push(`/login?next=${pathname}`);
+      } else if (workspaces.length === 0) {
+        router.push('/onboarding');
+      }
+    }
+  }, [user, workspaces, isLoading, isConnectionError, router, pathname]);
+
+  // Fail-closed secure error page
+  if (isConnectionError) {
+    return (
+      <div className="min-h-screen bg-[#F7F4EC] flex flex-col items-center justify-center p-6 text-center select-none">
+        <div className="max-w-md bg-white border border-border p-8 rounded-[16px] shadow-lg space-y-4">
+          <div className="w-12 h-12 rounded-full bg-red-50 text-[#C85450] flex items-center justify-center mx-auto">
+            <span className="text-xl font-bold">!</span>
+          </div>
+          <h2 className="text-lg font-bold text-[#073F3B]">Connection Error</h2>
+          <p className="text-xs text-[#506A64] leading-relaxed">
+            We’re unable to connect securely right now. Please try again shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state Spinner
+  if (isLoading || !user || (!currentWorkspace && workspaces.length > 0)) {
+    return (
+      <div className="min-h-screen bg-[#F7F4EC] flex flex-col items-center justify-center p-6 text-[#073F3B] select-none">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0AA99D]"></div>
+          <p className="text-xs font-bold tracking-wider uppercase text-[#506A64]">Securing your session...</p>
+        </div>
+      </div>
+    );
+  }
 
   const isSolo = currentWorkspace?.type === 'solo';
 
@@ -69,6 +112,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex flex-col bg-background md:flex-row text-foreground">
+      <head>
+        <title>Count Us In</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </head>
       
       {/* Top banner removed as per redesign rules */}
 
@@ -128,7 +175,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="min-w-0">
               <p className="font-bold text-primary truncate leading-tight">{user?.display_name || 'Guest User'}</p>
               <p className="text-[10px] text-[#667A75] font-semibold mt-0.5 leading-none">
-                {currentWorkspace?.type === 'solo' ? 'Personal space' : currentWorkspace?.name || 'Shared space'}
+                {currentWorkspace?.type === 'solo' 
+                  ? 'Personal space' 
+                  : `${currentWorkspace?.name || 'Shared space'} · ${members.length} member${members.length === 1 ? '' : 's'}`}
               </p>
             </div>
           </div>
@@ -200,7 +249,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
               <div>
                 <p className="font-bold text-sm text-primary">{user?.display_name}</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{currentWorkspace?.name}</p>
+                <p className="text-[10px] text-muted-foreground font-bold tracking-wider">
+                  {currentWorkspace?.type === 'solo' 
+                    ? 'Personal space' 
+                    : `${currentWorkspace?.name || 'Shared space'} · ${members.length} member${members.length === 1 ? '' : 's'}`}
+                </p>
               </div>
             </div>
             <button
@@ -219,20 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
 
-      {/* Connection Status Pill - Warm/Gold theme, floating in bottom corner */}
-      {isFallbackMode && showFallbackPill && (
-        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 bg-[#FFF6DF] text-[#76510B] border border-[#ECD7A4] rounded-full py-2 px-4 text-xs font-semibold z-50 flex items-center gap-2.5 shadow-md animate-fade-in select-none">
-          <span className="inline-block w-2 h-2 rounded-full bg-[#E5A823]"></span>
-          <span>Local mode · Data is currently stored in this browser</span>
-          <button
-            onClick={() => setShowFallbackPill(false)}
-            className="hover:opacity-70 text-[#76510B] font-bold text-sm leading-none pl-1 focus:outline-hidden"
-            title="Dismiss"
-          >
-            ×
-          </button>
-        </div>
-      )}
+
 
       {/* Mobile Bottom Navigation Bar (Sticky Bottom) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border h-16 flex justify-around items-center px-2 z-30 shadow-lg">

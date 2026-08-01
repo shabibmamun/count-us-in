@@ -78,6 +78,7 @@ export default function BalanceUpPage() {
   // Group status
   const totalOutstanding = transfers.reduce((sum, t) => sum + t.amount, 0);
   const isBalanced = totalOutstanding <= 0.05;
+  const hasSharedExpenses = expenses.some(e => !e.is_deleted && e.visibility !== 'private');
 
   const handleSaveSettlement = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,7 +221,13 @@ export default function BalanceUpPage() {
               Suggested balance transfers
             </h2>
 
-            {isBalanced ? (
+            {!hasSharedExpenses ? (
+              <div className="py-8 text-center text-xs text-[#506A64] font-semibold flex flex-col items-center gap-2">
+                <FolderSync className="h-8 w-8 text-[#0AA99D]/40" />
+                <span className="text-sm font-bold text-primary">No shared balances yet</span>
+                <p className="font-medium text-muted-foreground max-w-sm">Shared balances and settlement suggestions will appear after members record shared expenses.</p>
+              </div>
+            ) : isBalanced ? (
               <div className="py-8 text-center text-xs text-accent font-semibold flex flex-col items-center gap-2">
                 <CheckCircle2 className="h-8 w-8" />
                 <span>The workspace is completely balanced! No transfers are required.</span>
