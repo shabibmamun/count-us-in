@@ -8,15 +8,26 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
                (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : 'https://count-us-in.vercel.app');
 
-const isMissingOrPlaceholder = (val: string | undefined) => {
-  return !val || val.includes('placeholder') || val === '';
-};
-
 if (isProd) {
   const missing = [];
-  if (isMissingOrPlaceholder(url)) missing.push('NEXT_PUBLIC_SUPABASE_URL');
-  if (isMissingOrPlaceholder(key)) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
-  if (isMissingOrPlaceholder(appUrl)) missing.push('NEXT_PUBLIC_APP_URL');
+  
+  if (!url) {
+    missing.push('NEXT_PUBLIC_SUPABASE_URL (is undefined/missing)');
+  } else if (url.includes('placeholder') || url === '') {
+    missing.push(`NEXT_PUBLIC_SUPABASE_URL (is template placeholder value: "${url}")`);
+  }
+
+  if (!key) {
+    missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY (is undefined/missing)');
+  } else if (key.includes('placeholder') || key === '') {
+    missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY (is template placeholder value)');
+  }
+
+  if (!appUrl) {
+    missing.push('NEXT_PUBLIC_APP_URL (is undefined/missing)');
+  } else if (appUrl.includes('placeholder') || appUrl === '') {
+    missing.push('NEXT_PUBLIC_APP_URL (is template placeholder value)');
+  }
 
   if (missing.length > 0) {
     throw new Error(`CRITICAL CONFIGURATION ERROR: Mandatory production environment variables are missing or invalid: ${missing.join(', ')}.`);
